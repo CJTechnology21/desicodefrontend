@@ -15,6 +15,8 @@ const HomePage: React.FC = () => {
         {/* Hero Section */}
         <Hero />
 
+        <div className="h-12 md:h-24" />
+
         {/* Language Showcase */}
         <LanguageShowcase />
 
@@ -39,8 +41,11 @@ const HomePage: React.FC = () => {
         </div>
 
         {/* Editor with padding */}
-        <div className="px-4 md:px-8 lg:px-16">
-          <Editor bg={false} className="h-[400px] md:h-[500px] rounded-xl border border-white/10" />
+        <div className="px-2 md:px-8 lg:px-16 w-full max-w-7xl mx-auto">
+          <Editor
+            bg={false}
+            className="h-[500px] md:h-[600px] rounded-xl border border-white/10 shadow-2xl shadow-purple-500/10"
+          />
         </div>
 
         {/* Newsletter/CTA Section */}

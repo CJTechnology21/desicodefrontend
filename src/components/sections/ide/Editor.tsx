@@ -89,10 +89,26 @@ tawp`
   const [outputWidth, setOutputWidth] = useState(35); // Percentage of container width when on right
   const [isDragging, setIsDragging] = useState(false);
   const [terminalPosition, setTerminalPosition] = useState<'bottom' | 'right'>('right');
+  const [isMobile, setIsMobile] = useState(false);
   const [autoRun, setAutoRun] = useState(true); // Auto-run enabled by default
   const containerRef = useRef<HTMLDivElement>(null);
   const autoRunTimerRef = useRef<NodeJS.Timeout | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Screen size detection for mobile responsiveness
+  useEffect(() => {
+    const checkMobile = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      if (mobile) {
+        setTerminalPosition('bottom');
+      }
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Free tier tracking for unauthenticated users
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -312,10 +328,10 @@ tawp`
       <div className={`flex-1 flex flex-col ${isFullScreen ? '' : 'w-full'} bg-black overflow-hidden`}>
 
         {/* Top Menu Bar */}
-        <div className="h-12 bg-[#0A0A0A] border-b border-[#1A1A1A] flex items-center px-4 gap-6">
+        <div className="h-auto md:h-12 bg-[#0A0A0A] border-b border-[#1A1A1A] flex flex-wrap items-center px-4 py-2 md:py-0 gap-3 md:gap-6">
           <div className="flex items-center gap-2">
             <FileCode className="w-5 h-5 text-[#7001FE]" />
-            <span className="text-white font-semibold text-sm">DesiCode IDE</span>
+            <span className="text-white font-semibold text-xs md:text-sm">IDE</span>
           </div>
 
           {/* Language Selector Dropdown */}
@@ -357,13 +373,15 @@ tawp`
 
           <div className="flex-1"></div>
 
-          <button
-            onClick={() => setIsFullScreen(!isFullScreen)}
-            className="p-2 hover:bg-[#1A1A1A] rounded transition-colors text-[#CCCCCC]"
-            title={isFullScreen ? "Exit Full Screen" : "Enter Full Screen"}
-          >
-            {isFullScreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
-          </button>
+          <div className="flex items-center gap-2 ml-auto">
+            <button
+              onClick={() => setIsFullScreen(!isFullScreen)}
+              className="p-1.5 md:p-2 hover:bg-[#1A1A1A] rounded transition-colors text-[#CCCCCC]"
+              title={isFullScreen ? "Exit Full Screen" : "Enter Full Screen"}
+            >
+              {isFullScreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+            </button>
+          </div>
         </div>
 
         {/* Main Content */}
@@ -376,29 +394,29 @@ tawp`
             <div className="flex-1 flex flex-col min-w-0 min-h-0">
 
               {/* Toolbar */}
-              <div className="h-10 bg-[#0A0A0A] border-b border-[#1A1A1A] flex items-center px-4 gap-3">
+              <div className="h-auto md:h-10 bg-[#0A0A0A] border-b border-[#1A1A1A] flex flex-wrap items-center px-4 py-2 md:py-0 gap-2 md:gap-3">
                 <button
                   onClick={handleRunCode}
                   disabled={loading}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded transition-all ${loading
+                  className={`flex items-center gap-2 px-4 py-1.5 rounded transition-all shadow-lg ${loading
                     ? 'bg-[#858585] cursor-not-allowed'
-                    : 'bg-[#0E639C] hover:bg-[#1177BB]'
-                    } text-white text-sm font-medium`}
+                    : 'bg-[#0E639C] hover:bg-[#1177BB] active:scale-95'
+                    } text-white text-xs md:text-sm font-bold min-w-[80px] justify-center`}
                 >
                   {loading ? (
                     <>
-                      <Square className="w-4 h-4" />
-                      <span>Running...</span>
+                      <Square className="w-3.5 h-3.5" />
+                      <span>...</span>
                     </>
                   ) : (
                     <>
-                      <Play className="w-4 h-4" fill="currentColor" />
-                      <span>Run Code</span>
+                      <Play className="w-3.5 h-3.5" fill="currentColor" />
+                      <span>Run</span>
                     </>
                   )}
                 </button>
 
-                <div className="h-5 w-px bg-[#1A1A1A]"></div>
+                <div className="hidden md:block h-5 w-px bg-[#1A1A1A]"></div>
 
                 {/* Auto-Run Toggle */}
                 <button
@@ -416,13 +434,13 @@ tawp`
 
                 <div className="h-5 w-px bg-[#3E3E42]"></div>
 
-                <div className="text-[#CCCCCC] text-xs">
+                <div className="hidden md:block text-[#CCCCCC] text-xs">
                   {language} - {languageMap[language]}
                 </div>
               </div>
 
               {/* Monaco Editor */}
-              <div className="flex-1 overflow-hidden">
+              <div className="flex-1 overflow-hidden relative">
                 <MonacoEditor
                   height="100%"
                   defaultLanguage="python"
@@ -430,19 +448,19 @@ tawp`
                   value={code}
                   onChange={(value: string | undefined) => setCode(value || "")}
                   options={{
-                    fontSize: 14,
+                    fontSize: isMobile ? 12 : 14,
                     fontFamily: "'Fira Code', 'Cascadia Code', 'JetBrains Mono', Consolas, monospace",
-                    minimap: { enabled: true },
+                    minimap: { enabled: !isMobile },
                     scrollBeyondLastLine: false,
                     wordWrap: "on",
-                    lineNumbers: "on",
+                    lineNumbers: isMobile ? "off" : "on",
                     renderWhitespace: "selection",
                     bracketPairColorization: { enabled: true },
                     guides: {
                       indentation: true,
                       bracketPairs: true
                     },
-                    padding: { top: 16, bottom: 16 },
+                    padding: { top: 12, bottom: 12 },
                     smoothScrolling: true,
                     cursorBlinking: "smooth",
                     cursorSmoothCaretAnimation: "on",
@@ -517,23 +535,34 @@ tawp`
         </div>
 
         {/* Status Bar */}
-        <div className="h-6 bg-[#007ACC] flex items-center px-4 gap-4 text-white text-xs">
-          <div className="flex items-center gap-2">
+        <div className="h-7 bg-[#007ACC] flex items-center px-3 md:px-4 gap-3 md:gap-4 text-white text-[10px] md:text-xs overflow-hidden">
+          <div className="flex items-center gap-1.5 flex-shrink-0">
             <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-            <span>Ready</span>
+            <span className="font-medium">Ready</span>
           </div>
-          <div>Lines: {code.split('\n').length}</div>
-          <div>Language: {language}</div>
+
+          <div className="hidden sm:block h-3 w-px bg-white/20"></div>
+
+          <div className="hidden sm:block flex-shrink-0">Lines: {code.split('\n').length}</div>
+
+          <div className="h-3 w-px bg-white/20"></div>
+
+          <div className="flex-shrink-0 truncate max-w-[80px] md:max-w-none">
+            {languageMap[language]}
+          </div>
+
           <div className="flex-1"></div>
+
           {!isAuthenticated && (
-            <div className="flex items-center gap-2 bg-white/10 px-2 py-0.5 rounded">
-              <span className="font-medium">Free Tier:</span>
-              <span className={freeRunsRemaining <= 5 ? 'text-yellow-300 font-bold' : ''}>
-                {freeRunsRemaining}/20 runs
+            <div className="flex items-center gap-1.5 bg-white/10 px-2 py-0.5 rounded flex-shrink-0">
+              <span className="hidden xs:inline font-medium uppercase text-[9px] opacity-80">Free:</span>
+              <span className={`font-bold ${freeRunsRemaining <= 5 ? 'text-yellow-300' : ''}`}>
+                {freeRunsRemaining}/20
               </span>
             </div>
           )}
-          <div>DesiCode v1.0.0</div>
+
+          <div className="hidden md:block opacity-60">v1.0.0</div>
         </div>
       </div>
 
