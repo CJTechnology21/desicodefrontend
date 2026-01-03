@@ -15,7 +15,7 @@ export const ProtectedAdminRoute: React.FC = () => {
             try {
                 // Fetch user data from API to check admin status
                 const response = await fetch(
-                    `${import.meta.env.VITE_API_BASE_URL || "http://localhost:8000"}/api/v1/auth/me`,
+                    `${import.meta.env.VITE_API_BASE_URL || "http://localhost:8000"}/auth/me`,
                     {
                         headers: {
                             Authorization: `Bearer ${token}`,
